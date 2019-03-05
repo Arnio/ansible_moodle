@@ -1,0 +1,9 @@
+### Ansible ###
+*.retry
+
+### Vagrant ###
+# General
+.vagrant/
+
+### Vagrant Patch ###
+*.box
