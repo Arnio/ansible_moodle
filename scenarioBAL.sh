@@ -14,6 +14,5 @@ moodledb ansible_host=$databaseIP ansible_user=vagrant ansible_ssh_private_key_f
 [balancer]
 moodlebal ansible_host=$balancerIP ansible_user=vagrant ansible_ssh_private_key_file=/home/vagrant/.ssh/$balancerIP.pem 
 
-[web_server]
 EOF
 

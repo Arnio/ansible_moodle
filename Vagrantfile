@@ -82,7 +82,12 @@ Vagrant.configure("2") do |config|
       webIP="#{network}"+"#{n + 100}"
       webName="node#{n}"
       ansconfig.vm.provision "file", source: ".vagrant/machines/#{webName}/virtualbox/private_key", destination: "~/.ssh/#{webIP}.pem"
-      ansconfig.vm.provision "shell", path: "scenarioAddWeb.sh", :args => [webIP, webName]
+      if n==1
+        ansconfig.vm.provision "shell", path: "scenarioAddFirstWeb.sh", :args => [webIP, webName]
+      else
+        ansconfig.vm.provision "shell", path: "scenarioAddWeb.sh", :args => [webIP, webName]
+      end
+      
     end
 
   end
