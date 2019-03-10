@@ -25,22 +25,19 @@ http {
     # for more information.
     include /etc/nginx/conf.d/*.conf;
     upstream moodle {
-       server 192.168.56.101;
-       server 192.168.56.102;
-#    {% for host in groups['web_server'] %}
-#    server {{ hostvars[host]['ansible_facts']['eth1']['ipv4']['address'] }};
-#    {% endfor %}
+
+
     }
     server {
         listen       80 default_server;
         listen       [::]:80 default_server;
-        server_name  192.168.56.100;
+        server_name  {{ BALHOST }};
         root         /usr/share/nginx/html;
         # Load configuration files for the default server block.
         include /etc/nginx/default.d/*.conf;
         location / {
           proxy_pass http://moodle;
-          
+
         }
         error_page 404 /404.html;
             location = /40x.html {

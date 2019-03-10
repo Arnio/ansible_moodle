@@ -83,14 +83,23 @@
 #       src: /home/vagrant/moodle-latest-36.tgz
        src: https://download.moodle.org/download.php/direct/stable36/moodle-latest-36.tgz
        dest: /var/www/html
+       owner: apache
+       group: apache
        remote_src: yes
 
    - name: Replace apache config
      replace:
        path: /etc/httpd/conf/httpd.conf
-       regexp: '(DocumentRoot "/var/www/html")'
+       regexp: 'DocumentRoot "/var/www/html"'
        replace: 'DocumentRoot "/var/www/html/moodle"'
-   
+
+   - name: Replace apache config
+     replace:
+       path: /etc/httpd/conf/httpd.conf
+       regexp: 'DirectoryIndex index.html'
+       replace: 'DirectoryIndex index.php index.html index.htm'
+      
+
    - name: Creates directory /var/moodledata
      file:
        path: /var/moodledata
@@ -102,8 +111,9 @@
 
    - name: Allow apache to modify files in /var/moodledata
      sefcontext:
-       target: '/var/moodledata'
+       target: '/var/moodledata(/.*)'
        setype: httpd_sys_rw_content_t
+       reload: True
        state: present
 
    - name: Set httpd_can_network_connect flag on and keep it persistent across reboots
@@ -117,7 +127,7 @@
      command: php admin/cli/install.php
       --lang=en
       --dbtype=mariadb
-      --wwwroot=http://{{ ansible_facts.ansible_eth1.ipv4.address }}/
+      --wwwroot=http://{{ ansible_eth1.ipv4.address }}/
       --dataroot=/var/moodledata
       --dbhost={{ BASEHOST }}
       --dbname={{ MAINDB }}
@@ -138,10 +148,24 @@
      args:
        chdir: "/var/www/html/moodle/"
        creates: config.php
-   - name: Creates directory /var/www/html/moodle/
-     file:
-       path: /var/www/html/moodle/
-       state: directory
-       owner: apache
-       group: apache
-#       mode: 0755
+     delegate_to: node1
+     notify:
+       - restart httpd
+
+   - name: Pushes configuration
+     template: src=templates/config.php.j2 dest=/var/www/html/moodle/config.php mode=755 owner=apache group=apache
+     notify:
+       - restart httpd
+
+  handlers:
+   - name: restart httpd
+     service: name=httpd state=restarted
+     
+  #  - name: Creates directory /var/www/html/moodle/
+  #    file:
+  #      path: /var/www/html/moodle/
+  #      state: directory
+  #      owner: apache
+
+  #      group: apache
+  #      mode: 0755

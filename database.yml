@@ -2,8 +2,7 @@
 - name: Database server install
   hosts: db_server
   become: true
-  gather_facts: true
-
+  
   tasks:
    - name: Add official MariaDB repository
      yum_repository:
@@ -31,8 +30,7 @@
    - name: insert line in file
      lineinfile:
        path: /etc/my.cnf.d/server.cnf
-       regexp: '^[mysqld]'
-       insertafter: '^[mysqld]'
+       insertafter: '\[mysqld\]'
        line: "character_set_server = 'utf8mb4'"
      notify:
        - restart mariadb
@@ -40,8 +38,7 @@
    - name: insert line in file
      lineinfile:
        path: /etc/my.cnf.d/server.cnf
-       regexp: '^[mysqld] '
-       insertafter: '^[mysqld] '
+       insertafter: '\[mysqld\] '
        line: "innodb_file_per_table = 'ON'"
      notify:
        - restart mariadb
