@@ -1,0 +1,14 @@
+---
+- name: Moodle LAMP+NGINX install 
+  hosts: all
+  gather_facts: true
+  
+  tasks:
+   - name: upgrade system
+   - name: updating the system
+     yum: update_cache=yes
+
+- include_tasks: database.yml
+- include_tasks: web.yml
+- include_tasks: balancer.yml
+#- include_tasks: app.yml

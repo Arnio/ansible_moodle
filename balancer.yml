@@ -1,0 +1,31 @@
+---
+- name: Balancer install
+  hosts: balancer
+  become: true
+  gather_facts: true
+
+  tasks:
+   - name: Install epel release
+     yum:
+        name: epel-release
+        state: present
+
+   - name: Install nginx
+     yum:
+        name: nginx
+        state: present
+     
+   - name: Start nginx, if not started
+     service:
+        name: nginx       
+        state: started
+        enabled: yes
+
+   - name: Pushes configuration
+     template: src=templates/nginx.conf.j2 dest=/etc/nginx/nginx.conf mode=0640 owner=root group=root
+     notify:
+       - restart nginx
+  
+  handlers:
+   - name: restart nginx
+     service: name=nginx state=restarted
