@@ -95,13 +95,6 @@
 #       mode: 0755
 
 
-   - name: Allow apache to modify files in /var/moodledata
-     sefcontext:
-       target: '/var/moodledata(/.*)'
-       setype: httpd_sys_rw_content_t
-       reload: True
-       state: present
-
    - name: Set httpd_can_network_connect flag on 
      seboolean:
        name: httpd_can_network_connect
@@ -121,13 +114,14 @@
       --dbpass={{ PASSWDDB }}
       --adminuser=admin
       --adminpass=Admin1
+      --adminemail='example@example.com'
       --fullname='Moodle'
       --shortname=moodle
+      --summary='Moodle'
       --non-interactive
       --allow-unstable
       --agree-license
-      --adminemail='example@example.com'
-      --summary='Moodle'
+#      --skip-database
      args:
        chdir: "/var/www/html/moodle/"
        creates: config.php
@@ -136,10 +130,40 @@
      notify:
        - restart httpd
 
+   - name: Allow apache to modify files in /var/moodledata
+     sefcontext:
+       target: '/var/moodledata'
+       setype: httpd_sys_rw_content_t
+       reload: True
+       state: present
+
+   - name: Allow apache to modify files in /var/moodledata
+     shell: chcon -R -t httpd_sys_rw_content_t /var/moodledata
+
    - name: Pushes configuration
      template: src=templates/config.php.j2 dest=/var/www/html/moodle/config.php mode=755 owner=apache group=apache
      notify:
        - restart httpd
+
+   - name: Start service firewalld, if not started
+     service:
+      name: firewalld       
+      state: started
+      enabled: yes    
+
+   - name: Add ssh service firewalld
+     firewalld:
+       zone: public
+       service: ssh
+       permanent: yes
+       state: enabled
+
+   - name: Add http service firewalld
+     firewalld:
+       zone: public
+       port: 80/tcp
+       permanent: yes
+       state: enabled
 
   handlers:
    - name: restart httpd

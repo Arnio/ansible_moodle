@@ -31,15 +31,14 @@
      lineinfile:
        path: /etc/my.cnf.d/server.cnf
        insertafter: '\[mysqld\]'
-       line: "character_set_server = 'utf8mb4'"
-     notify:
-       - restart mariadb
-
-   - name: insert line in file
-     lineinfile:
-       path: /etc/my.cnf.d/server.cnf
-       insertafter: '\[mysqld\] '
-       line: "innodb_file_per_table = 'ON'"
+       line: "{{ item }}"
+     loop:
+       - character_set_server = 'utf8mb4'
+       - innodb_file_per_table = 'ON'
+       - innodb_file_format = Barracuda
+       - innodb_file_per_table = 1
+       - collation-server = utf8mb4_unicode_ci
+       - skip-character-set-client-handshake
      notify:
        - restart mariadb
 
@@ -120,6 +119,25 @@
        state: present
      tags: mariadb
 
+   - name: Start service firewalld, if not started
+     service:
+      name: firewalld       
+      state: started
+      enabled: yes    
+
+   - name: Add ssh service firewalld
+     firewalld:
+       zone: public
+       service: ssh
+       permanent: yes
+       state: enabled
+
+   - name: Add mariadb service firewalld
+     firewalld:
+       zone: public
+       port: 3306/tcp
+       permanent: yes
+       state: enabled
 
   handlers:
    - name: restart mariadb
