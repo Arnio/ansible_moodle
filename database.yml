@@ -131,6 +131,8 @@
        service: ssh
        permanent: yes
        state: enabled
+     notify:
+       - firewalld reload
 
    - name: Add mariadb service firewalld
      firewalld:
@@ -138,7 +140,12 @@
        port: 3306/tcp
        permanent: yes
        state: enabled
-
+     notify:
+       - firewalld reload
+       
   handlers:
    - name: restart mariadb
      service: name=mariadb state=restarted
+
+   - name: firewalld reload
+     command: firewall-cmd --reload

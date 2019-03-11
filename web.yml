@@ -157,6 +157,8 @@
        service: ssh
        permanent: yes
        state: enabled
+     notify:
+       - firewalld reload
 
    - name: Add http service firewalld
      firewalld:
@@ -164,8 +166,12 @@
        port: 80/tcp
        permanent: yes
        state: enabled
-
+     notify:
+       - firewalld reload
+       
   handlers:
-   - name: restart httpd
-     service: name=httpd state=restarted
-    
+   - name: restart nginx
+     service: name=nginx state=restarted
+
+   - name: firewalld reload
+     command: firewall-cmd --reload
