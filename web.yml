@@ -51,6 +51,7 @@
        - php-fileinfo 
        - php-xml 
        - php-intl
+       - php-redis
       state: latest
       update_cache: yes
  
@@ -59,11 +60,20 @@
        path: /etc/httpd/conf/httpd.conf
        regexp: 'DirectoryIndex index.html'
        replace: 'DirectoryIndex index.php index.html index.htm'
+     notify:
+       - restart httpd
 
-   - name: Restart service httpd, in all cases
-     service:
-       name: httpd
-       state: restarted
+   - name: Replace php config
+     replace:
+       path: /etc/php.ini
+       regexp: 'session.save_handler = files'
+       replace: 'session.save_handler = redis'
+  
+   - name: Replace php config
+     replace:
+       path: /etc/php.ini
+       regexp: ';session.save_path = \"/tmp\"'
+       replace: 'session.save_path = "tcp://{{ BASEHOST }}:6379?auth={{ PASSWDDB }}"'
 
    - name: Extract moodle-latest-36.tgz into /var/www/html
      unarchive:
@@ -170,8 +180,8 @@
        - firewalld reload
        
   handlers:
-   - name: restart nginx
-     service: name=nginx state=restarted
+   - name: restart httpd
+     service: name=httpd state=restarted
 
    - name: firewalld reload
      command: firewall-cmd --reload
