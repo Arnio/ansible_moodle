@@ -26,8 +26,6 @@
      yum:
         name: http://rpms.remirepo.net/enterprise/remi-release-7.rpm
         state: present
-#     update_cache: yes
-
 
    - name: enable remi-php72
      shell: yum-config-manager --enable remi-php72
@@ -56,12 +54,6 @@
       state: latest
       update_cache: yes
  
-
-#  - name: write the apache config file
-#    template:
-#      src: /vagrant/httpd.j2
-#      dest: /etc/httpd.conf
-
    - name: Replace apache config
      replace:
        path: /etc/httpd/conf/httpd.conf
@@ -73,27 +65,21 @@
        name: httpd
        state: restarted
 
-#   - name: Download file from a file path
-#     get_url:
-#       url: https://download.moodle.org/download.php/direct/stable36/moodle-latest-36.tgz
-#       dest: /home/vagrant/moodle-latest-36.tgz
- 
    - name: Extract moodle-latest-36.tgz into /var/www/html
      unarchive:
-#       src: /home/vagrant/moodle-latest-36.tgz
        src: https://download.moodle.org/download.php/direct/stable36/moodle-latest-36.tgz
        dest: /var/www/html
        owner: apache
        group: apache
        remote_src: yes
 
-   - name: Replace apache config
+   - name: Replace Document Root apache config
      replace:
        path: /etc/httpd/conf/httpd.conf
        regexp: 'DocumentRoot "/var/www/html"'
        replace: 'DocumentRoot "/var/www/html/moodle"'
 
-   - name: Replace apache config
+   - name: Replace index apache config
      replace:
        path: /etc/httpd/conf/httpd.conf
        regexp: 'DirectoryIndex index.html'
@@ -116,7 +102,7 @@
        reload: True
        state: present
 
-   - name: Set httpd_can_network_connect flag on and keep it persistent across reboots
+   - name: Set httpd_can_network_connect flag on 
      seboolean:
        name: httpd_can_network_connect
        state: yes
@@ -142,13 +128,11 @@
       --agree-license
       --adminemail='example@example.com'
       --summary='Moodle'
-      #  {% if moodle_db_import is defined and moodle_version > 2.9 %}
-      #    --skip-database
-      #  {% endif %}
      args:
        chdir: "/var/www/html/moodle/"
        creates: config.php
      delegate_to: node1
+     ignore_errors: yes
      notify:
        - restart httpd
 
@@ -160,12 +144,4 @@
   handlers:
    - name: restart httpd
      service: name=httpd state=restarted
-     
-  #  - name: Creates directory /var/www/html/moodle/
-  #    file:
-  #      path: /var/www/html/moodle/
-  #      state: directory
-  #      owner: apache
-
-  #      group: apache
-  #      mode: 0755
+    
